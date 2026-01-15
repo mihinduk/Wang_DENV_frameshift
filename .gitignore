@@ -1,0 +1,34 @@
+# Large data files (stored on HTCF, not in git)
+*.fastq
+*.fastq.gz
+*.bam
+*.bam.bai
+*.sam
+*.fai
+*.dict
+
+# Temporary files
+*.tmp
+*.log
+*~
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+
+# R
+.Rhistory
+.RData
+.Rproj.user
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo

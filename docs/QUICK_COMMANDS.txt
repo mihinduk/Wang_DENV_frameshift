@@ -1,0 +1,167 @@
+================================================================================
+QUICK REFERENCE: Commands for Frameshift Investigation
+================================================================================
+
+# Navigate to working directory
+cd /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline
+
+================================================================================
+VIEW FRAMESHIFTS
+================================================================================
+
+# View all frameshifts across samples
+for sample in SRR35818875 SRR35818879 SRR35818882 SRR35818886 SRR35818888 SRR35818898; do
+  echo "=== ${sample} ==="
+  cut -f1-5 ${sample}_frameshifts.txt
+  echo ""
+done
+
+# Count frameshifts per sample
+wc -l *_frameshifts.txt | grep -v total
+
+# View detailed annotations for one sample
+grep frameshift SRR35818898_full_run/SRR35818898_annotated.vcf | grep -v '^#' | cut -f1-8
+
+================================================================================
+EXTRACT ALLELE FREQUENCIES
+================================================================================
+
+# Get AF for all frameshifts
+grep frameshift *_annotated.vcf | grep -v '^#' | grep -oP 'AF=\K[0-9.]+' | sort -n
+
+# Get AF with sample names
+for sample in SRR35818875 SRR35818879 SRR35818882 SRR35818886 SRR35818888 SRR35818898; do
+  echo "=== ${sample} ==="
+  grep frameshift ${sample}_annotated.vcf | grep -v '^#' | grep -oP 'AF=\K[0-9.]+'
+done
+
+# Get depth (DP) for frameshifts
+grep frameshift *_annotated.vcf | grep -v '^#' | grep -oP 'DP=\K[0-9]+' | sort -n
+
+================================================================================
+CHECK REFERENCE SEQUENCE CONTEXT
+================================================================================
+
+# Reference file
+REF="/scratch/sahlab/kathie/DENV_frameshift/collab_pipeline/references/denv1.fasta"
+
+# Index reference (if needed)
+samtools faidx $REF
+
+# Extract sequence around position 456 (prM hotspot)
+samtools faidx $REF NC_001477.1:406-506
+
+# Extract sequence around positions 7959-7963 (NS5 hotspot)
+samtools faidx $REF NC_001477.1:7909-8013
+
+# Check for homopolymers at all positions
+for pos in 456 1038 1937 1944 6277 7959 7963; do
+  start=$((pos-25))
+  end=$((pos+25))
+  echo "=== Position $pos ==="
+  samtools faidx $REF NC_001477.1:${start}-${end}
+  echo ""
+done
+
+================================================================================
+IGV VISUALIZATION
+================================================================================
+
+# BAM files for IGV (use any sample)
+# Example with validated full pipeline run:
+BAM: /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline/SRR35818898_full_run/SRR35818898_rg.sorted.bam
+REF: /scratch/sahlab/kathie/DENV_frameshift/collab_pipeline/references/denv1.fasta
+
+# In IGV, navigate to:
+# - NC_001477.1:456   (prM frameshift)
+# - NC_001477.1:7959  (NS5 frameshift #1)
+# - NC_001477.1:7963  (NS5 frameshift #2)
+
+# All sample BAM files:
+ls -lh *full_run/*.bam
+ls -lh /scratch/sahlab/kathie/DENV_frameshift/collab_corrected_nc/*.bam
+ls -lh /scratch/sahlab/kathie/DENV_frameshift/SRR*/variant_calling/*.bam
+
+================================================================================
+STATISTICS
+================================================================================
+
+# Total variants per sample
+for sample in SRR35818875 SRR35818879 SRR35818882 SRR35818886 SRR35818888 SRR35818898; do
+  echo -n "${sample}: "
+  grep -v '^#' ${sample}.vcf | wc -l
+done
+
+# Frameshift vs total variants
+for sample in SRR35818875 SRR35818879 SRR35818882 SRR35818886 SRR35818888 SRR35818898; do
+  total=$(grep -v '^#' ${sample}.vcf | wc -l)
+  fs=$(wc -l < ${sample}_frameshifts.txt)
+  echo "${sample}: ${fs} frameshifts / ${total} total variants"
+done
+
+# Variant types breakdown (from SnpEff)
+grep -v '^#' SRR35818898_full_run/SRR35818898_annotated.vcf | \
+  grep -oP 'ANN=[^|]*\|[^|]*' | \
+  cut -d'|' -f2 | sort | uniq -c | sort -rn
+
+================================================================================
+COMPARE ORIGINAL VS CORRECTED PARAMETERS
+================================================================================
+
+# Compare frameshift counts
+echo "Sample | Original | Corrected"
+for sample in SRR35818875 SRR35818879 SRR35818882 SRR35818886 SRR35818888 SRR35818898; do
+  orig=$(wc -l < ${sample}_frameshifts.txt)
+  corr=$(wc -l < ${sample}_corrected_frameshifts.txt)
+  echo "${sample} | ${orig} | ${corr}"
+done
+
+# Detailed comparison for one sample
+echo "Original:"
+cut -f1-5 SRR35818898_frameshifts.txt
+echo ""
+echo "Corrected:"
+cut -f1-5 SRR35818898_corrected_frameshifts.txt
+
+================================================================================
+GENE ANNOTATION LOOKUP
+================================================================================
+
+# DENV1 genome structure (NC_001477.1):
+# 1-10735 bp total
+#
+# Genes (from SnpEff annotation):
+# C     (capsid):           95-394
+# prM   (pre-membrane):     437-934
+# E     (envelope):         935-2419
+# NS1:                      2420-3475
+# NS2A:                     3476-4129
+# NS2B:                     4130-4519
+# NS3:                      4520-6376
+# NS4A:                     6377-6757
+# 2K:                       6758-6826
+# NS4B:                     6827-7573
+# NS5:                      7574-10270
+
+# Which gene is each frameshift in?
+# Position 456:  prM (437-934)
+# Position 1038: E (935-2419)
+# Position 1937: E (935-2419)
+# Position 1944: E (935-2419)
+# Position 6277: NS3 (4520-6376)
+# Position 7959: NS5 (7574-10270)
+# Position 7963: NS5 (7574-10270)
+
+================================================================================
+SUMMARY FILES
+================================================================================
+
+# Read full analysis summaries
+cat SRR35818898_FULL_PIPELINE_RESULTS.txt
+cat CORRECTED_FRAMESHIFT_SUMMARY.txt
+cat ALL_SAMPLES_FRAMESHIFT_SUMMARY.txt
+
+# SnpEff HTML reports (download to view)
+ls -lh *_snpEff_summary.html
+
+================================================================================

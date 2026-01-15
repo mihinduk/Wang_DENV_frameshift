@@ -1,0 +1,244 @@
+================================================================================
+DENV1 FRAMESHIFT INVESTIGATION - CORRECTED SUMMARY
+Complete Analysis of 6 DENV1 Samples with Accurate Positions
+================================================================================
+
+Date: January 15, 2026
+Reference: NC_001477.1 (DENV1 - 10735 bp)
+Analysis: GATK HaplotypeCaller + SnpEff annotation
+
+================================================================================
+SAMPLE-BY-SAMPLE FRAMESHIFT DETAILS
+================================================================================
+
+SRR35818875: 3 frameshifts
+   Position 456  (prM): G → GA (insertion)
+   Position 7959 (NS5):  GGA → G (deletion)
+   Position 7963 (NS5):  A → AGG (insertion)
+
+SRR35818879: 4 frameshifts
+   Position 456  (prM):  G → GA (insertion)
+   Position 6277 (NS3):  AGGAG → A (4bp deletion)
+   Position 7959 (NS5):  GGA → G (deletion)
+   Position 7963 (NS5):  A → AGG (insertion)
+
+SRR35818882: 3 frameshifts
+   Position 456  (prM):  G → GA (insertion)
+   Position 7959 (NS5):  GGA → G (deletion)
+   Position 7963 (NS5):  A → AGG (insertion)
+
+SRR35818886: 3 frameshifts
+   Position 456  (prM):  G → GA (insertion)
+   Position 7959 (NS5):  GGA → G (deletion)
+   Position 7963 (NS5):  A → AGG (insertion)
+
+SRR35818888: 5 frameshifts ⚠️ UNIQUE PATTERN
+   Position 1038 (E):    C → CA (insertion)
+   Position 1937 (E):    A → AT (insertion)
+   Position 1944 (E):    TCTCG → T (4bp deletion)
+   Position 7959 (NS5):  GGA → G (deletion)
+   Position 7963 (NS5):  A → AGG (insertion)
+   NOTE: Does NOT have position 456 frameshift!
+        Has unique E gene frameshifts instead
+
+SRR35818898: 1 frameshift ✓ FULL PIPELINE VALIDATED
+   Position 456 (prM):   G → GA (insertion)
+   NOTE: ONLY has prM frameshift - no NS5 or other frameshifts
+
+================================================================================
+FRAMESHIFT HOTSPOT ANALYSIS
+================================================================================
+
+HOTSPOT #1: Position 456 (prM gene)
+   Mutation:  G → GA (single base insertion)
+   Gene:      prM/pr (membrane glycoprotein precursor)
+   Frequency: 5/6 samples (83.3%)
+   Present:   SRR35818875, SRR35818879, SRR35818882, SRR35818886, SRR35818898
+   Absent:    SRR35818888 ⚠️
+   Effect:    c.20_21insA, p.Glu9fs
+   Impact:    HIGH - frameshift in structural protein
+
+HOTSPOT #2: Position 7959 (NS5 gene)
+   Mutation:  GGA → G (2bp deletion)
+   Gene:      NS5 (RNA-dependent RNA polymerase)
+   Frequency: 5/6 samples (83.3%)
+   Present:   SRR35818875, SRR35818879, SRR35818882, SRR35818886, SRR35818888
+   Absent:    SRR35818898 ⚠️
+   Impact:    HIGH - frameshift in viral replicase
+
+HOTSPOT #3: Position 7963 (NS5 gene)
+   Mutation:  A → AGG (2bp insertion)
+   Gene:      NS5 (RNA-dependent RNA polymerase)
+   Frequency: 5/6 samples (83.3%)
+   Present:   SRR35818875, SRR35818879, SRR35818882, SRR35818886, SRR35818888
+   Absent:    SRR35818898 ⚠️
+   Impact:    HIGH - frameshift in viral replicase
+   Note:      Only 4bp apart from position 7959!
+
+Sample-Specific Frameshifts:
+   Position 1038 (E gene):  Only in SRR35818888
+   Position 1937 (E gene):  Only in SRR35818888
+   Position 1944 (E gene):  Only in SRR35818888
+   Position 6277 (NS3):     Only in SRR35818879
+
+================================================================================
+FRAMESHIFT PATTERNS BY GENE
+================================================================================
+
+prM (membrane glycoprotein precursor):
+   Position 456: Present in 5/6 samples
+   
+E (envelope protein):
+   Position 1038: Only SRR35818888
+   Position 1937: Only SRR35818888
+   Position 1944: Only SRR35818888
+
+NS3 (serine protease/helicase):
+   Position 6277: Only SRR35818879
+
+NS5 (RNA-dependent RNA polymerase):
+   Position 7959: Present in 5/6 samples
+   Position 7963: Present in 5/6 samples (linked with 7959)
+
+================================================================================
+KEY OBSERVATIONS
+================================================================================
+
+1. Mutually Exclusive Patterns:
+   - Samples with position 456 (prM) generally lack unique frameshifts
+   - SRR35818888 LACKS position 456 but has 3 E gene frameshifts
+   - Suggests different viral variant or evolutionary trajectory
+
+2. Linked NS5 Frameshifts (7959 + 7963):
+   - Always occur together in same samples
+   - Only 4bp apart
+   - Could represent a single mutational event or linked hotspot
+
+3. Sample SRR35818898 is Cleanest:
+   - Only 1 frameshift (position 456)
+   - No NS5 frameshifts
+   - May represent less defective viral population
+
+4. Sample SRR35818888 is Most Divergent:
+   - 5 frameshifts (highest count)
+   - Lacks position 456 (common hotspot)
+   - Has 3 unique E gene frameshifts
+   - May represent different viral lineage or heavily defective population
+
+5. NS5 Frameshift Hotspot is Prevalent:
+   - 5/6 samples have NS5 frameshifts
+   - NS5 is ESSENTIAL for replication
+   - How can these viruses replicate?
+     → Likely defective viral genomes requiring trans-complementation
+
+================================================================================
+CRITICAL BIOLOGICAL QUESTIONS
+================================================================================
+
+Q1: How can viruses with NS5 frameshifts replicate?
+    A: Likely defective viral particles (DVPs) that can only replicate in 
+       presence of functional NS5 from co-infecting wild-type virus
+       (trans-complementation)
+
+Q2: Why are positions 7959/7963 such strong hotspots?
+    A: Possible explanations:
+       - Homopolymer or repetitive sequence prone to polymerase slippage
+       - Secondary structure causing alignment artifacts
+       - True biological hotspot for mutation
+       - Sequencing technology bias (Illumina, nanopore, etc.)
+
+Q3: Why does SRR35818888 lack position 456 but have E gene frameshifts?
+    A: May represent:
+       - Different viral lineage/genotype
+       - Different infection dynamics
+       - Different selective pressures
+       - More heavily defective population
+
+Q4: Are these frameshifts functional or defective?
+    A: Most likely defective because:
+       - NS5 frameshifts would abolish polymerase function
+       - prM frameshifts would disrupt virion maturation
+       - Present at ~50% frequency (AF=0.5) suggesting quasispecies
+
+Q5: Can defective particles serve a biological function?
+    A: Yes, defective viral particles can:
+       - Interfere with immune response
+       - Modulate infection dynamics
+       - Serve as decoys for neutralizing antibodies
+       - Affect disease severity
+
+================================================================================
+NEXT STEPS FOR INVESTIGATION
+================================================================================
+
+1. VISUAL INSPECTION IN IGV
+   Priority: Check if frameshifts are in homopolymer regions
+   
+   Commands:
+   Load BAM: /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline/SRR35818898_full_run/SRR35818898_rg.sorted.bam
+   Load Reference: /scratch/sahlab/kathie/DENV_frameshift/collab_pipeline/references/denv1.fasta
+   
+   Navigate to hotspots:
+   - NC_001477.1:456  (prM)
+   - NC_001477.1:7959 (NS5)
+   - NC_001477.1:7963 (NS5)
+   
+   Look for:
+   - Homopolymer runs (AAAA, GGGG, etc.)
+   - Low complexity sequence
+   - Mapping quality issues
+   - Strand bias
+   - Read alignment artifacts
+
+2. EXTRACT REFERENCE SEQUENCE CONTEXT
+   Get 50bp flanking each hotspot to check for homopolymers:
+   
+   samtools faidx denv1.fasta NC_001477.1:406-506    # Position 456
+   samtools faidx denv1.fasta NC_001477.1:7909-8013  # Positions 7959/7963
+
+3. ANALYZE ALLELE FREQUENCIES
+   Extract AF values and plot distribution:
+   
+   cd /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline
+   grep frameshift *_annotated.vcf | grep -v '^#' | \
+     grep -oP 'AF=\K[0-9.]+' | \
+     sort -n > frameshift_AFs.txt
+
+4. LITERATURE SEARCH
+   Topics to investigate:
+   - DENV defective viral genomes
+   - flavivirus frameshift
+   - DENV NS5 mutations
+   - viral quasispecies frameshifts
+   - trans-complementation flavivirus
+
+5. COMPARE TO OTHER DENV1 DATASETS
+   Check if these positions are known variants:
+   - Search NCBI Virus for NC_001477.1 variations
+   - Check ViPR (Virus Pathogen Resource)
+   - Look for these positions in other published DENV1 sequences
+
+================================================================================
+FILES FOR TOMORROW'S SESSION
+================================================================================
+
+Summary files:
+   /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline/SRR35818898_FULL_PIPELINE_RESULTS.txt
+   /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline/CORRECTED_FRAMESHIFT_SUMMARY.txt
+
+Frameshift data:
+   /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline/*_frameshifts.txt
+
+Annotated VCFs:
+   /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline/*_annotated.vcf
+
+Full pipeline example (validated):
+   /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline/SRR35818898_full_run/
+
+BAM files for IGV:
+   /scratch/sahlab/kathie/DENV_frameshift/collab_full_pipeline/SRR35818898_full_run/SRR35818898_rg.sorted.bam
+
+Reference:
+   /scratch/sahlab/kathie/DENV_frameshift/collab_pipeline/references/denv1.fasta
+
+================================================================================
