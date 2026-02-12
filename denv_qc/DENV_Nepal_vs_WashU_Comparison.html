@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DENV QC Comparison: Nepal vs WashU</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+<style>
+  .reveal { font-size: 26px; }
+  .reveal h1 { font-size: 1.7em; color: #2c3e50; }
+  .reveal h2 { font-size: 1.3em; color: #2c3e50; }
+  .reveal h3 { font-size: 1.0em; color: #555; }
+  .reveal table { font-size: 0.52em; margin: 0 auto; border-collapse: collapse; }
+  .reveal table th { background: #2c3e50; color: white; padding: 5px 8px; }
+  .reveal table td { padding: 4px 8px; border-bottom: 1px solid #ddd; }
+  .reveal table tr:nth-child(even) { background: #f8f9fa; }
+  .reveal ul, .reveal ol { text-align: left; }
+  .reveal .two-col { display: flex; gap: 25px; }
+  .reveal .two-col > div { flex: 1; }
+  .reveal .note { font-size: 0.55em; color: #888; margin-top: 15px; }
+  .reveal .stat-box { display: inline-block; background: #ecf0f1; border-radius: 10px; padding: 12px 20px; margin: 6px; text-align: center; min-width: 110px; }
+  .reveal .stat-box .stat-val { font-size: 1.6em; font-weight: bold; color: #2c3e50; }
+  .reveal .stat-box .stat-label { font-size: 0.6em; color: #777; margin-top: 3px; }
+  .reveal .good { color: #27ae60; }
+  .reveal .warn { color: #f39c12; }
+  .reveal .bad { color: #e74c3c; }
+  .reveal .nepal { color: #e67e22; }
+  .reveal .washu { color: #2980b9; }
+  .reveal .flag { background: #fff3cd; border-left: 4px solid #f39c12; padding: 8px 12px; margin: 8px 0; font-size: 0.65em; text-align: left; border-radius: 0 6px 6px 0; }
+  .reveal .danger { background: #f8d7da; border-left: 4px solid #e74c3c; padding: 8px 12px; margin: 8px 0; font-size: 0.65em; text-align: left; border-radius: 0 6px 6px 0; }
+  .reveal .pass { background: #d4edda; border-left: 4px solid #27ae60; padding: 8px 12px; margin: 8px 0; font-size: 0.65em; text-align: left; border-radius: 0 6px 6px 0; }
+  .reveal .highlight-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; padding: 15px 25px; margin: 8px; }
+  .reveal .highlight-box h3 { color: white; }
+  .reveal .bar-chart { width: 100%; max-width: 750px; margin: 0 auto; }
+  .reveal .bar-row { display: flex; align-items: center; margin: 5px 0; }
+  .reveal .bar-label { width: 140px; text-align: right; font-size: 0.55em; padding-right: 8px; white-space: nowrap; }
+  .reveal .bar-container { flex: 1; background: #ecf0f1; border-radius: 4px; height: 20px; position: relative; }
+  .reveal .bar-fill { height: 100%; border-radius: 4px; }
+  .reveal .bar-value { position: absolute; right: 5px; top: 2px; font-size: 0.6em; color: #555; }
+  .reveal .nepal-bar { background: #e67e22; }
+  .reveal .washu-bar { background: #2980b9; }
+  .reveal .compare-row { display: flex; align-items: center; margin: 6px 0; }
+  .reveal .compare-label { width: 150px; text-align: right; font-size: 0.6em; padding-right: 10px; }
+  .reveal .compare-bars { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .reveal .mini-bar { height: 14px; border-radius: 3px; position: relative; }
+  .reveal .mini-bar span { position: absolute; right: 5px; top: 0; font-size: 0.55em; color: white; font-weight: bold; }
+  code { background: #f0f0f0; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- TITLE -->
+<section>
+  <h1>DENV Sequencing QC Comparison</h1>
+  <h2><span class="nepal">Nepal Clinical</span> vs <span class="washu">WashU Cultured</span></h2>
+  <p style="color:#777; font-size:0.7em;">Same primers, same fastp parameters, different sample types</p>
+  <p style="font-size:0.55em; color:#aaa; margin-top:25px;">
+    Nepal: 40 clinical plasma samples &bull; MiSeq 2x231bp<br>
+    WashU: 3 cultured virus isolates &bull; MiSeq 2x150bp<br>
+    February 2026
+  </p>
+</section>
+
+<!-- STUDY DESIGN -->
+<section>
+  <h2>Study Design</h2>
+  <div class="two-col">
+    <div>
+      <h3 class="nepal">Nepal Clinical (n=40)</h3>
+      <table>
+        <tr><td>Source</td><td>Patient plasma</td></tr>
+        <tr><td>Virus state</td><td>Clinical infection</td></tr>
+        <tr><td>Platform</td><td>Illumina MiSeq</td></tr>
+        <tr><td>Read length</td><td><strong>2x231bp</strong></td></tr>
+        <tr><td>Library type</td><td>PCR-amplified WGS</td></tr>
+        <tr><td>DENV-1</td><td>6 samples</td></tr>
+        <tr><td>DENV-2</td><td>30 samples</td></tr>
+        <tr><td>DENV-3</td><td>4 samples</td></tr>
+        <tr><td>BioProject</td><td>PRJNA1346681</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 class="washu">WashU Cultured (n=3)</h3>
+      <table>
+        <tr><td>Source</td><td>Cell culture isolate</td></tr>
+        <tr><td>Virus state</td><td>Cultured / passaged</td></tr>
+        <tr><td>Platform</td><td>Illumina MiSeq</td></tr>
+        <tr><td>Read length</td><td><strong>2x150bp</strong></td></tr>
+        <tr><td>Library type</td><td>PCR-amplified WGS (same primers)</td></tr>
+        <tr><td>DENV-1</td><td>1 sample</td></tr>
+        <tr><td>DENV-2</td><td>1 sample</td></tr>
+        <tr><td>DENV-3</td><td>1 sample</td></tr>
+        <tr><td>Run ID</td><td>N997 (Grubaugh)</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="pass" style="max-width:700px; margin:12px auto;">
+    <strong>Key:</strong> Same PCR primers used for both datasets. QC run with identical fastp parameters. Differences reflect sample type, RNA quality, and sequencing configuration.
+  </div>
+</section>
+
+<!-- HEAD-TO-HEAD METRICS -->
+<section>
+  <h2>Head-to-Head: Key Metrics</h2>
+  <table style="font-size:0.55em;">
+    <tr>
+      <th>Metric</th>
+      <th colspan="3" style="background:#e67e22;">Nepal Clinical (n=40)</th>
+      <th colspan="3" style="background:#2980b9;">WashU Cultured (n=3)</th>
+    </tr>
+    <tr>
+      <th></th><th>Min</th><th>Median</th><th>Max</th><th>DENV1</th><th>DENV2</th><th>DENV3</th>
+    </tr>
+    <tr>
+      <td><strong>Raw reads</strong></td>
+      <td>78,458</td><td>201,034</td><td>1,649,756</td>
+      <td>1,379,488</td><td>1,101,828</td><td>1,137,666</td>
+    </tr>
+    <tr>
+      <td><strong>Clean reads</strong></td>
+      <td>65,256</td><td>162,156</td><td>1,278,758</td>
+      <td>1,361,412</td><td>1,088,238</td><td>1,122,968</td>
+    </tr>
+    <tr>
+      <td><strong>Pass rate</strong></td>
+      <td>73.5%</td><td>83.7%</td><td>91.9%</td>
+      <td class="good"><strong>98.7%</strong></td><td class="good"><strong>98.8%</strong></td><td class="good"><strong>98.7%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Q30 (after)</strong></td>
+      <td>94.3%</td><td>95.7%</td><td>96.2%</td>
+      <td>96.3%</td><td>95.8%</td><td>95.7%</td>
+    </tr>
+    <tr>
+      <td><strong>GC%</strong></td>
+      <td>45.9%</td><td>47.6%</td><td>51.1%</td>
+      <td>46.6%</td><td>45.9%</td><td>45.9%</td>
+    </tr>
+    <tr>
+      <td><strong>Duplication</strong></td>
+      <td>4.1%</td><td>10.4%</td><td>20.7%</td>
+      <td class="bad"><strong>39.8%</strong></td><td class="bad"><strong>30.0%</strong></td><td class="bad"><strong>39.7%</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Insert peak</strong></td>
+      <td>38bp</td><td>48bp</td><td>88bp</td>
+      <td class="good"><strong>213bp</strong></td><td class="good"><strong>252bp</strong></td><td class="good"><strong>167bp</strong></td>
+    </tr>
+    <tr>
+      <td><strong>Read length</strong></td>
+      <td colspan="3" style="text-align:center;">2x231bp (variable effective: 84&ndash;144bp mean)</td>
+      <td colspan="3" style="text-align:center;"><strong>2x150bp</strong> (full length)</td>
+    </tr>
+    <tr>
+      <td><strong>R2 N-spikes</strong></td>
+      <td colspan="3" style="text-align:center;" class="bad">42% N at positions 24, 59, 82, 131</td>
+      <td colspan="3" style="text-align:center;" class="good"><strong>None</strong></td>
+    </tr>
+  </table>
+</section>
+
+<!-- PASS RATE COMPARISON -->
+<section>
+  <h2>Read Retention After Filtering</h2>
+  <div class="bar-chart">
+    <h3>Pass Rate Comparison</h3>
+    <div class="compare-row">
+      <div class="compare-label"><strong>WashU DENV-1</strong></div>
+      <div class="compare-bars">
+        <div class="mini-bar washu-bar" style="width:98.7%;"><span>98.7%</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Nepal DENV-1 (median)</div>
+      <div class="compare-bars">
+        <div class="mini-bar nepal-bar" style="width:86.2%;"><span>86.2%</span></div>
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+    <div class="compare-row">
+      <div class="compare-label"><strong>WashU DENV-2</strong></div>
+      <div class="compare-bars">
+        <div class="mini-bar washu-bar" style="width:98.8%;"><span>98.8%</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Nepal DENV-2 (median)</div>
+      <div class="compare-bars">
+        <div class="mini-bar nepal-bar" style="width:83.0%;"><span>83.0%</span></div>
+      </div>
+    </div>
+    <div style="height:10px;"></div>
+    <div class="compare-row">
+      <div class="compare-label"><strong>WashU DENV-3</strong></div>
+      <div class="compare-bars">
+        <div class="mini-bar washu-bar" style="width:98.7%;"><span>98.7%</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Nepal DENV-3 (median)</div>
+      <div class="compare-bars">
+        <div class="mini-bar nepal-bar" style="width:87.6%;"><span>87.6%</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="flag" style="max-width:650px; margin:15px auto;">
+    <strong>15% gap:</strong> WashU retains ~99% of reads vs Nepal ~84%. Nepal&rsquo;s loss is driven by adapter read-through from short inserts and R2 artifact trimming &mdash; not poor base quality.
+  </div>
+</section>
+
+<!-- INSERT SIZE - THE BIG DIFFERENCE -->
+<section>
+  <h2>Insert Size: The Defining Difference</h2>
+  <div class="two-col">
+    <div>
+      <h3 class="nepal">Nepal Clinical</h3>
+      <div class="stat-box" style="border-top:4px solid #e67e22;">
+        <div class="stat-val nepal">48bp</div>
+        <div class="stat-label">Median Insert Peak</div>
+      </div>
+      <ul style="font-size:0.6em;">
+        <li>Range: 38&ndash;88bp</li>
+        <li>Inserts far shorter than 2x231bp reads</li>
+        <li>~180bp of each read is adapter</li>
+        <li>R1 &amp; R2 almost entirely overlap</li>
+      </ul>
+      <div class="danger">
+        <strong>Cause:</strong> Degraded RNA from clinical plasma. Viral RNA in patient blood is highly fragmented.
+      </div>
+    </div>
+    <div>
+      <h3 class="washu">WashU Cultured</h3>
+      <div class="stat-box" style="border-top:4px solid #2980b9;">
+        <div class="stat-val washu">211bp</div>
+        <div class="stat-label">Mean Insert Peak</div>
+      </div>
+      <ul style="font-size:0.6em;">
+        <li>DENV-1: 213bp, DENV-2: 252bp, DENV-3: 167bp</li>
+        <li>Inserts larger than read length (150bp)</li>
+        <li>R1 &amp; R2 provide independent coverage</li>
+        <li>Minimal adapter contamination</li>
+      </ul>
+      <div class="pass">
+        <strong>Cause:</strong> Intact RNA from cultured virus. Cell culture provides high-concentration, non-degraded viral RNA.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DUPLICATION RATES -->
+<section>
+  <h2>Duplication: Opposite Pattern</h2>
+  <div class="two-col">
+    <div>
+      <h3 class="nepal">Nepal Clinical</h3>
+      <div class="stat-box" style="border-top:4px solid #e67e22;">
+        <div class="stat-val good">10.4%</div>
+        <div class="stat-label">Median Duplication</div>
+      </div>
+      <ul style="font-size:0.6em;">
+        <li>Range: 4.1&ndash;20.7%</li>
+        <li>Lower overall depth &rarr; fewer duplicate collisions</li>
+        <li>Typical for moderate-depth clinical sequencing</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="washu">WashU Cultured</h3>
+      <div class="stat-box" style="border-top:4px solid #2980b9;">
+        <div class="stat-val bad">36.5%</div>
+        <div class="stat-label">Mean Duplication</div>
+      </div>
+      <ul style="font-size:0.6em;">
+        <li>DENV-1: 39.8%, DENV-2: 30.0%, DENV-3: 39.7%</li>
+        <li>Very high depth (1.1&ndash;1.4M reads) on 10.7kb genome</li>
+        <li>~10,000x+ raw coverage &rarr; inevitable duplicates</li>
+        <li>Cultured virus = high viral titer = over-sequencing</li>
+      </ul>
+    </div>
+  </div>
+  <div class="flag" style="max-width:700px; margin:12px auto;">
+    <strong>Interpretation:</strong> WashU&rsquo;s high duplication is a consequence of extremely deep sequencing of a small genome, not a library quality issue. After deduplication, effective coverage will still be ~6,000&ndash;9,000x.
+  </div>
+</section>
+
+<!-- SEQUENCING DEPTH -->
+<section>
+  <h2>Sequencing Depth</h2>
+  <div class="bar-chart">
+    <h3>Clean Reads per Sample</h3>
+    <div class="compare-row">
+      <div class="compare-label"><strong>WashU DENV-1</strong></div>
+      <div class="compare-bars">
+        <div class="mini-bar washu-bar" style="width:100%;"><span>1,361,412</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Nepal DENV-1 (median)</div>
+      <div class="compare-bars">
+        <div class="mini-bar nepal-bar" style="width:15%;"><span>204,096</span></div>
+      </div>
+    </div>
+    <div style="height:8px;"></div>
+    <div class="compare-row">
+      <div class="compare-label"><strong>WashU DENV-2</strong></div>
+      <div class="compare-bars">
+        <div class="mini-bar washu-bar" style="width:80%;"><span>1,088,238</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Nepal DENV-2 (median)</div>
+      <div class="compare-bars">
+        <div class="mini-bar nepal-bar" style="width:11.4%;"><span>155,412</span></div>
+      </div>
+    </div>
+    <div style="height:8px;"></div>
+    <div class="compare-row">
+      <div class="compare-label"><strong>WashU DENV-3</strong></div>
+      <div class="compare-bars">
+        <div class="mini-bar washu-bar" style="width:82%;"><span>1,122,968</span></div>
+      </div>
+    </div>
+    <div class="compare-row">
+      <div class="compare-label">Nepal DENV-3 (median)</div>
+      <div class="compare-bars">
+        <div class="mini-bar nepal-bar" style="width:16%;"><span>218,922</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="note">WashU samples have ~5&ndash;7x more clean reads per sample. Both provide ample coverage for the 10.7kb DENV genome.</p>
+</section>
+
+<!-- GC CONTENT -->
+<section>
+  <h2>GC Content</h2>
+  <div class="two-col">
+    <div>
+      <table>
+        <tr><th>Dataset</th><th>Serotype</th><th>GC%</th></tr>
+        <tr><td class="washu"><strong>WashU</strong></td><td>DENV-1</td><td><strong>46.6%</strong></td></tr>
+        <tr><td class="washu"><strong>WashU</strong></td><td>DENV-2</td><td><strong>45.9%</strong></td></tr>
+        <tr><td class="washu"><strong>WashU</strong></td><td>DENV-3</td><td><strong>45.9%</strong></td></tr>
+        <tr><td colspan="3" style="background:#eee;"></td></tr>
+        <tr><td class="nepal">Nepal</td><td>DENV-1 (mean)</td><td>47.9%</td></tr>
+        <tr><td class="nepal">Nepal</td><td>DENV-2 (mean)</td><td>48.0%</td></tr>
+        <tr><td class="nepal">Nepal</td><td>DENV-3 (mean)</td><td>47.0%</td></tr>
+        <tr><td colspan="3" style="background:#eee;"></td></tr>
+        <tr><td style="color:#888;">DENV reference genomes</td><td></td><td>~46&ndash;47%</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Interpretation</h3>
+      <ul style="font-size:0.65em;">
+        <li>WashU GC% (45.9&ndash;46.6%) closely matches <strong>DENV reference genomes</strong> (~46&ndash;47%)</li>
+        <li>Nepal GC% is 1&ndash;2% higher across all serotypes</li>
+        <li>Elevation in Nepal samples consistent with <strong>low-level host (human) read contamination</strong> (human genome ~41% GC, but host-derived reads from non-specific priming can skew GC)</li>
+        <li>3 Nepal outliers at 50&ndash;51% GC suggest more substantial host contamination</li>
+      </ul>
+      <div class="pass">
+        WashU cultured virus provides the <strong>expected baseline GC</strong> for pure DENV without host contamination.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- R2 QUALITY COMPARISON -->
+<section>
+  <h2>R2 Quality: Night and Day</h2>
+  <div class="two-col">
+    <div>
+      <h3 class="nepal">Nepal &mdash; R2 Imaging Artifacts</h3>
+      <table>
+        <tr><th>R2 Position</th><th>N Rate</th><th>Quality</th></tr>
+        <tr><td>24</td><td class="bad"><strong>41.7%</strong></td><td>Q13.6</td></tr>
+        <tr><td>59</td><td class="bad"><strong>33.3%</strong></td><td>Q14.8</td></tr>
+        <tr><td>82</td><td class="bad"><strong>35.8%</strong></td><td>Q14.6</td></tr>
+        <tr><td>131</td><td class="warn">5.2%</td><td>Q16.6</td></tr>
+      </table>
+      <div class="danger" style="margin-top:10px;">
+        All 40 samples affected. MiSeq run-level imaging failures during R2 sequencing.
+      </div>
+    </div>
+    <div>
+      <h3 class="washu">WashU &mdash; Clean R2</h3>
+      <table>
+        <tr><th>R2 Position</th><th>N Rate</th><th>Quality</th></tr>
+        <tr><td>All positions</td><td class="good"><strong>&lt;1%</strong></td><td class="good">Q30+</td></tr>
+      </table>
+      <div class="pass" style="margin-top:10px;">
+        <strong>No N-spikes detected at any position.</strong> Clean R2 throughout. Different MiSeq run, no imaging issues.
+      </div>
+      <p style="font-size:0.6em; color:#777; margin-top:10px;">This confirms the Nepal R2 artifacts are specific to that MiSeq run, not inherent to the primer set or library protocol.</p>
+    </div>
+  </div>
+</section>
+
+<!-- READ LENGTH -->
+<section>
+  <h2>Read Length &amp; Effective Coverage</h2>
+  <div class="two-col">
+    <div>
+      <h3 class="nepal">Nepal: 2x231bp</h3>
+      <ul style="font-size:0.6em;">
+        <li>Nominal: 231bp per read</li>
+        <li>Effective mean: 84&ndash;144bp (after trim)</li>
+        <li>Much of each read is adapter due to short inserts</li>
+        <li>R1 and R2 heavily overlap &rarr; effective single-end</li>
+        <li>Unique information per pair: ~48bp (median insert)</li>
+      </ul>
+      <div class="flag">
+        Longer reads were wasted on adapter sequencing. A 2x150bp kit would have produced nearly identical usable data at lower cost.
+      </div>
+    </div>
+    <div>
+      <h3 class="washu">WashU: 2x150bp</h3>
+      <ul style="font-size:0.6em;">
+        <li>Nominal: 150bp per read</li>
+        <li>Effective mean: 150bp (full length retained)</li>
+        <li>Inserts &gt; read length &rarr; minimal adapter</li>
+        <li>R1 and R2 provide largely independent coverage</li>
+        <li>Unique information per pair: 167&ndash;252bp</li>
+      </ul>
+      <div class="pass">
+        Read length well-matched to insert size. Efficient use of sequencing capacity.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUALITY SCORE COMPARISON -->
+<section>
+  <h2>Base Quality After Filtering</h2>
+  <table style="font-size:0.6em;">
+    <tr><th></th><th colspan="2" style="background:#e67e22;">Nepal (n=40)</th><th colspan="2" style="background:#2980b9;">WashU (n=3)</th></tr>
+    <tr><th>Metric</th><th>Median</th><th>Range</th><th>Mean</th><th>Range</th></tr>
+    <tr>
+      <td><strong>Q20 rate</strong></td>
+      <td>98.7%</td><td>98.3&ndash;98.9%</td>
+      <td>96.7%</td><td>96.6&ndash;97.0%</td>
+    </tr>
+    <tr>
+      <td><strong>Q30 rate</strong></td>
+      <td>95.7%</td><td>94.3&ndash;96.2%</td>
+      <td>95.9%</td><td>95.7&ndash;96.3%</td>
+    </tr>
+  </table>
+  <div class="two-col" style="margin-top:15px;">
+    <div>
+      <div class="flag">
+        <strong>Counterintuitive:</strong> Nepal Q20 (98.7%) is slightly <em>higher</em> than WashU (96.7%). This is because Nepal&rsquo;s aggressive trimming (removing short/low-quality reads) enriches for high-quality survivors. The 16% of Nepal reads that get removed are the low-quality ones.
+      </div>
+    </div>
+    <div>
+      <div class="pass">
+        <strong>Q30 rates are essentially identical</strong> between datasets (~95.7&ndash;95.9%). Both produce high-quality bases after filtering. The reads that survive Nepal trimming are just as good as WashU reads.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WASHU SAMPLE DETAILS -->
+<section>
+  <h2>WashU Sample Details</h2>
+  <table style="font-size:0.55em;">
+    <tr><th>Sample</th><th>Serotype</th><th>Raw Reads</th><th>Clean Reads</th><th>Pass%</th><th>Q20%</th><th>Q30%</th><th>GC%</th><th>Dup%</th><th>Insert</th><th>Read Len</th></tr>
+    <tr>
+      <td>WU_Dengue1</td><td>DENV-1</td>
+      <td>1,379,488</td><td>1,361,412</td><td class="good">98.7%</td>
+      <td>97.0%</td><td>96.3%</td><td>46.6%</td>
+      <td class="bad">39.8%</td><td class="good">213bp</td><td>2x150bp</td>
+    </tr>
+    <tr>
+      <td>WU_Dengue2</td><td>DENV-2</td>
+      <td>1,101,828</td><td>1,088,238</td><td class="good">98.8%</td>
+      <td>96.6%</td><td>95.8%</td><td>45.9%</td>
+      <td class="bad">30.0%</td><td class="good">252bp</td><td>2x150bp</td>
+    </tr>
+    <tr>
+      <td>WU_Dengue3</td><td>DENV-3</td>
+      <td>1,137,666</td><td>1,122,968</td><td class="good">98.7%</td>
+      <td>96.6%</td><td>95.7%</td><td>45.9%</td>
+      <td class="bad">39.7%</td><td class="good">167bp</td><td>2x150bp</td>
+    </tr>
+  </table>
+  <div style="margin-top:15px; font-size:0.65em; text-align:left; max-width:700px; margin-left:auto; margin-right:auto;">
+    <p><strong>Library IDs:</strong></p>
+    <ul style="font-size:0.85em;">
+      <li>DENV-1: N997_I13631_Grubaugh_Dengue1_cDNA (UDP0094)</li>
+      <li>DENV-2: N997_I13632_Grubaugh_Dengue2_cDNA (UDP0095)</li>
+      <li>DENV-3: N997_I13633_Grubaugh_Dengue3_cDNA (UDP0096)</li>
+    </ul>
+  </div>
+</section>
+
+<!-- SUMMARY OF DIFFERENCES -->
+<section>
+  <h2>Summary of Key Differences</h2>
+  <table style="font-size:0.55em;">
+    <tr><th>Characteristic</th><th class="nepal">Nepal Clinical</th><th class="washu">WashU Cultured</th><th>Driver</th></tr>
+    <tr>
+      <td><strong>Insert size</strong></td>
+      <td class="bad">38&ndash;88bp (median 48)</td>
+      <td class="good">167&ndash;252bp (mean 211)</td>
+      <td>RNA degradation in clinical plasma</td>
+    </tr>
+    <tr>
+      <td><strong>Pass rate</strong></td>
+      <td class="warn">73&ndash;92% (median 84%)</td>
+      <td class="good">98.7&ndash;98.8%</td>
+      <td>Adapter read-through from short inserts</td>
+    </tr>
+    <tr>
+      <td><strong>Duplication</strong></td>
+      <td class="good">4&ndash;21% (median 10%)</td>
+      <td class="bad">30&ndash;40%</td>
+      <td>Over-sequencing of high-titer cultured virus</td>
+    </tr>
+    <tr>
+      <td><strong>R2 artifacts</strong></td>
+      <td class="bad">42% N at 4 positions</td>
+      <td class="good">None</td>
+      <td>MiSeq run-specific imaging failure</td>
+    </tr>
+    <tr>
+      <td><strong>GC content</strong></td>
+      <td class="warn">47.0&ndash;51.1%</td>
+      <td class="good">45.9&ndash;46.6%</td>
+      <td>Host contamination in clinical samples</td>
+    </tr>
+    <tr>
+      <td><strong>Depth</strong></td>
+      <td>65K&ndash;1.28M reads</td>
+      <td>1.09&ndash;1.36M reads</td>
+      <td>Lower viral titer in clinical samples</td>
+    </tr>
+    <tr>
+      <td><strong>Q30 (post-filter)</strong></td>
+      <td class="good">94.3&ndash;96.2%</td>
+      <td class="good">95.7&ndash;96.3%</td>
+      <td>Comparable after trimming</td>
+    </tr>
+  </table>
+</section>
+
+<!-- IMPLICATIONS -->
+<section>
+  <h2>Implications for Downstream Analysis</h2>
+  <div class="two-col">
+    <div>
+      <h3>Consensus Assembly</h3>
+      <ul style="font-size:0.6em;">
+        <li>Both datasets have sufficient depth for full-genome consensus</li>
+        <li>Nepal: short inserts may create coverage gaps at amplicon junctions</li>
+        <li>WashU: long inserts provide more even coverage across amplicons</li>
+        <li>WashU cultured samples serve as <strong>positive controls</strong> for validating the assembly pipeline</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Variant Calling</h3>
+      <ul style="font-size:0.6em;">
+        <li>Nepal: lower depth may limit minor variant detection (&lt;5% frequency)</li>
+        <li>WashU: high depth (after dedup) enables confident variant calling</li>
+        <li>Nepal host contamination may produce false variants if reads aren&rsquo;t filtered by MAPQ</li>
+        <li>WashU pure culture provides clean variant calls for comparison</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pass" style="max-width:700px; margin:12px auto;">
+    <strong>Recommendation:</strong> Process WashU samples first through the variant calling pipeline as positive controls. Use the WashU consensus sequences as high-confidence references when evaluating Nepal clinical assemblies.
+  </div>
+</section>
+
+<!-- CONCLUSIONS -->
+<section>
+  <h2>Conclusions</h2>
+  <div class="two-col">
+    <div>
+      <div class="highlight-box">
+        <h3>Both Datasets Are Usable</h3>
+        <ul style="font-size:0.7em; text-align:left;">
+          <li>Q30 &gt; 94% for all 43 samples</li>
+          <li>Sufficient depth for DENV genome assembly</li>
+          <li>Same primer set ensures compatibility</li>
+          <li>fastp trimming effectively cleans both datasets</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div style="background:linear-gradient(135deg, #e67e22 0%, #d35400 100%); color:white; border-radius:10px; padding:15px 25px; margin:8px;">
+        <h3 style="color:white;">Key Takeaways</h3>
+        <ol style="font-size:0.65em; text-align:left;">
+          <li><strong>Insert size</strong> is the biggest quality differentiator &mdash; driven by RNA source</li>
+          <li><strong>R2 artifacts</strong> are run-specific, not protocol-specific</li>
+          <li><strong>Duplication</strong> reflects depth, not quality</li>
+          <li>WashU samples are ideal <strong>positive controls</strong></li>
+          <li>Clinical samples need <strong>host read filtering</strong> that cultured samples do not</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- METHODS -->
+<section>
+  <h2>Methods</h2>
+  <div style="text-align:left; font-size:0.58em; max-width:700px; margin:0 auto;">
+    <p><strong>Nepal data:</strong> NCBI BioProject PRJNA1346681, 40 samples (DENV1: 6, DENV2: 30, DENV3: 4). Illumina MiSeq 2x231bp. Clinical plasma, PCR-amplified WGS.</p>
+    <p><strong>WashU data:</strong> N997 run (Grubaugh), 3 samples (DENV1-3, 1 each). Illumina MiSeq 2x150bp. Cultured virus, same PCR primer set.</p>
+    <p><strong>QC tool:</strong> fastp v1.0.1 with identical parameters: <code>--qualified_quality_phred 20 --length_required 50 --cut_front --cut_tail --cut_window_size 4 --cut_mean_quality 20 --correction --overlap_len_require 30 --detect_adapter_for_pe</code></p>
+    <p><strong>Aggregation:</strong> MultiQC v1.33</p>
+    <p><strong>Comparison date:</strong> February 2026</p>
+  </div>
+</section>
+
+</div><!-- end slides -->
+</div><!-- end reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: true,
+  transition: 'slide',
+  width: 1100,
+  height: 700,
+  margin: 0.08,
+});
+</script>
+</body>
+</html>

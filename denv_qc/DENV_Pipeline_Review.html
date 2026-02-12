@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VVCP Pipeline Review - DENV Nepal</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+<style>
+  .reveal { font-size: 26px; }
+  .reveal h1 { font-size: 1.8em; color: #2c3e50; }
+  .reveal h2 { font-size: 1.3em; color: #2c3e50; }
+  .reveal h3 { font-size: 1.0em; color: #555; }
+  .reveal table { font-size: 0.52em; margin: 0 auto; border-collapse: collapse; }
+  .reveal table th { background: #2c3e50; color: white; padding: 5px 8px; }
+  .reveal table td { padding: 4px 8px; border-bottom: 1px solid #ddd; }
+  .reveal table tr:nth-child(even) { background: #f8f9fa; }
+  .reveal ul, .reveal ol { text-align: left; }
+  .reveal .two-col { display: flex; gap: 25px; }
+  .reveal .two-col > div { flex: 1; }
+  .reveal .three-col { display: flex; gap: 15px; }
+  .reveal .three-col > div { flex: 1; }
+  .reveal .note { font-size: 0.55em; color: #888; margin-top: 15px; }
+  .reveal .stat-box { display: inline-block; background: #ecf0f1; border-radius: 10px; padding: 12px 20px; margin: 8px; text-align: center; min-width: 120px; }
+  .reveal .stat-box .stat-val { font-size: 1.8em; font-weight: bold; color: #2c3e50; }
+  .reveal .stat-box .stat-label { font-size: 0.65em; color: #777; margin-top: 4px; }
+  .reveal .good { color: #27ae60; }
+  .reveal .warn { color: #f39c12; }
+  .reveal .bad { color: #e74c3c; }
+  .reveal .flag { background: #fff3cd; border-left: 4px solid #f39c12; padding: 8px 12px; margin: 8px 0; font-size: 0.65em; text-align: left; border-radius: 0 6px 6px 0; }
+  .reveal .danger { background: #f8d7da; border-left: 4px solid #e74c3c; padding: 8px 12px; margin: 8px 0; font-size: 0.65em; text-align: left; border-radius: 0 6px 6px 0; }
+  .reveal .pass { background: #d4edda; border-left: 4px solid #27ae60; padding: 8px 12px; margin: 8px 0; font-size: 0.65em; text-align: left; border-radius: 0 6px 6px 0; }
+  .reveal .highlight-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px; padding: 15px 25px; margin: 8px; }
+  .reveal .highlight-box h3 { color: white; }
+  .reveal code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 0.9em; }
+  .reveal .pipeline-flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 5px; margin: 15px 0; }
+  .reveal .pipeline-step { background: #3498db; color: white; padding: 8px 14px; border-radius: 8px; font-size: 0.6em; text-align: center; min-width: 90px; }
+  .reveal .pipeline-step.qc { background: #27ae60; }
+  .reveal .pipeline-step.problem { background: #e74c3c; }
+  .reveal .pipeline-step.warn-step { background: #f39c12; }
+  .reveal .pipeline-arrow { font-size: 1.2em; color: #bbb; }
+  .reveal .compare-table td.current { background: #fce4e4; }
+  .reveal .compare-table td.recommended { background: #e4fce4; }
+  .reveal .verdict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 800px; margin: 0 auto; }
+  .reveal .small { font-size: 0.7em; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- TITLE -->
+<section>
+  <h1>Virus Variant Calling Pipeline</h1>
+  <h2>Code Review &amp; Gap Analysis</h2>
+  <p style="color:#777; font-size:0.75em;">
+    Pipeline: <a href="https://github.com/Rajindra04/Virus-Variant-Calling-Pipeline" style="color:#3498db;">github.com/Rajindra04/Virus-Variant-Calling-Pipeline</a>
+  </p>
+  <p style="font-size:0.6em; color:#aaa; margin-top:25px;">
+    Evaluated for: DENV Nepal WGS (BioProject PRJNA1346681)<br>
+    40 samples &bull; Illumina MiSeq 2x231bp &bull; PCR-amplified<br>
+    February 2026
+  </p>
+</section>
+
+<!-- PIPELINE OVERVIEW -->
+<section>
+  <h2>Pipeline Architecture</h2>
+  <p style="font-size:0.65em; color:#777;">Python package with 8 modular scripts, orchestrated by <code>run_pipeline.py</code></p>
+  <div class="pipeline-flow">
+    <div class="pipeline-step">Sample Sheet<br><span style="font-size:0.8em;">create_samplesheet</span></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step warn-step">fastp + FastQC<br><span style="font-size:0.8em;">map_reads</span></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step">bwa-mem2<br><span style="font-size:0.8em;">map_reads</span></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step qc">SAM &rarr; BAM<br><span style="font-size:0.8em;">samtobamdenv</span></div>
+  </div>
+  <div class="pipeline-flow">
+    <div class="pipeline-step">SnpEff DB<br><span style="font-size:0.8em;">create_snpeff_db</span></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step problem">ivar consensus<br><span style="font-size:0.8em;">variant_calling</span></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step problem">GATK + SnpEff<br><span style="font-size:0.8em;">variant_calling</span></div>
+    <div class="pipeline-arrow">&rarr;</div>
+    <div class="pipeline-step warn-step">Summary<br><span style="font-size:0.8em;">summarize</span></div>
+  </div>
+  <div style="display:flex; justify-content:center; gap:20px; margin-top:15px; font-size:0.55em;">
+    <span><span class="pipeline-step qc" style="padding:3px 8px;">&nbsp;</span> Adequate QC</span>
+    <span><span class="pipeline-step warn-step" style="padding:3px 8px;">&nbsp;</span> Needs improvement</span>
+    <span><span class="pipeline-step problem" style="padding:3px 8px;">&nbsp;</span> Significant issues</span>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section>
+  <h2>Tool Stack</h2>
+  <table>
+    <tr><th>Tool</th><th>Version</th><th>Role</th><th>Assessment</th></tr>
+    <tr><td>fastp</td><td>&ge;0.23.4</td><td>Read trimming &amp; QC</td><td class="warn">Defaults only</td></tr>
+    <tr><td>FastQC</td><td>&ge;0.12.1</td><td>Post-trim visualization</td><td class="warn">Reports unused</td></tr>
+    <tr><td>bwa-mem2</td><td>&ge;2.2.1</td><td>Read alignment</td><td class="warn">No filtering</td></tr>
+    <tr><td>samtools</td><td>&ge;1.20</td><td>BAM processing, depth, mpileup</td><td class="good">Adequate</td></tr>
+    <tr><td>ivar</td><td>&ge;1.4.2</td><td>Consensus generation</td><td class="bad">Bad params</td></tr>
+    <tr><td>GATK4</td><td>&ge;4.5.0.0</td><td>Variant calling</td><td class="bad">Wrong ploidy</td></tr>
+    <tr><td>bcftools</td><td>&ge;1.20</td><td>Alternative variant calling</td><td class="good">Correct ploidy</td></tr>
+    <tr><td>SnpEff/SnpSift</td><td>&ge;5.2</td><td>Variant annotation</td><td class="good">Well configured</td></tr>
+  </table>
+  <p class="note">Tool selection is appropriate; issues are in parameterization, not tool choice</p>
+</section>
+
+<!-- WHAT THE PIPELINE DOES WELL -->
+<section>
+  <h2>What the Pipeline Does Well</h2>
+  <div class="two-col">
+    <div>
+      <h3 class="good">Pre-flight Validation</h3>
+      <ul style="font-size:0.65em;">
+        <li>Checks all 8 required tools are in PATH</li>
+        <li>Validates input directory existence</li>
+        <li>Tests write permissions (output + sam_files)</li>
+        <li>Verifies reference FASTA + GenBank files exist</li>
+      </ul>
+      <h3 class="good">Reference QC</h3>
+      <ul style="font-size:0.65em;">
+        <li>Validates FASTA contains only IUPAC bases</li>
+        <li>Checks GenBank format (LOCUS + FEATURES)</li>
+        <li>Verifies FASTA &harr; GenBank ID match</li>
+        <li>Auto-creates indices (.fai, .dict) if missing</li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="good">BAM Validation</h3>
+      <ul style="font-size:0.65em;">
+        <li><code>samtools quickcheck</code> on raw + sorted BAM</li>
+        <li>Alignment count &gt; 0 required to proceed</li>
+        <li>Validates at multiple pipeline stages</li>
+      </ul>
+      <h3 class="good">Annotation Pipeline</h3>
+      <ul style="font-size:0.65em;">
+        <li>Custom SnpEff database from GenBank</li>
+        <li>Structured field extraction via SnpSift</li>
+        <li>Gene-level impact aggregation across samples</li>
+        <li>Pre-built DENV1-4 reference indices included</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ISSUE 1: FASTP DEFAULTS -->
+<section>
+  <h2>Issue #1: fastp Runs with All Defaults</h2>
+  <div class="two-col">
+    <div>
+      <h3>Current Pipeline</h3>
+      <pre style="font-size:0.55em; background:#fce4e4; padding:10px; border-radius:6px; text-align:left;">fastp -i R1 -I R2 -o trimmed_R1 -O trimmed_R2
+# That's it. No other parameters.</pre>
+      <table class="compare-table" style="margin-top:10px;">
+        <tr><th>Parameter</th><th>Pipeline (default)</th></tr>
+        <tr><td>Quality threshold</td><td class="current">Q15</td></tr>
+        <tr><td>Min read length</td><td class="current">15 bp</td></tr>
+        <tr><td>Sliding window trim</td><td class="current">disabled</td></tr>
+        <tr><td>Overlap correction</td><td class="current">disabled</td></tr>
+        <tr><td>N-base filtering</td><td class="current">5 N max (default)</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Recommended</h3>
+      <pre style="font-size:0.55em; background:#e4fce4; padding:10px; border-radius:6px; text-align:left;">fastp -i R1 -I R2 -o trimmed_R1 -O trimmed_R2 \
+  --qualified_quality_phred 20 \
+  --length_required 50 \
+  --cut_front --cut_tail \
+  --cut_window_size 4 \
+  --cut_mean_quality 20 \
+  --correction \
+  --overlap_len_require 30 \
+  --detect_adapter_for_pe</pre>
+      <div class="danger" style="margin-top:10px;">
+        <strong>Impact on our data:</strong> The R2 imaging artifact bases (Q13&ndash;14 at positions 24, 59, 82) would be <strong>retained</strong> with default Q15 threshold. Sliding window trimming is essential to remove these.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ISSUE 2: NO DUPLICATE REMOVAL -->
+<section>
+  <h2>Issue #2: No Duplicate Removal</h2>
+  <div class="two-col">
+    <div>
+      <h3>The Problem</h3>
+      <ul style="font-size:0.65em;">
+        <li>PCR-amplified libraries produce optical and PCR duplicates</li>
+        <li>Our DENV data shows <strong>4&ndash;21% duplication rates</strong></li>
+        <li>Duplicates inflate coverage estimates</li>
+        <li>Duplicates bias variant allele frequencies</li>
+        <li>Can cause false variant calls or mask real low-frequency variants</li>
+      </ul>
+      <div class="danger">
+        The pipeline has <strong>no duplicate marking or removal step</strong> at any stage &mdash; not in fastp, not via samtools markdup, not via Picard MarkDuplicates.
+      </div>
+    </div>
+    <div>
+      <h3>Recommended Fix</h3>
+      <p style="font-size:0.65em;">Add after BAM sorting, before variant calling:</p>
+      <pre style="font-size:0.55em; background:#e4fce4; padding:10px; border-radius:6px; text-align:left;"># Option A: samtools
+samtools markdup \
+  sample.sorted.bam \
+  sample.dedup.bam
+
+# Option B: picard (GATK companion)
+gatk MarkDuplicates \
+  -I sample.sorted.bam \
+  -O sample.dedup.bam \
+  -M sample.dedup_metrics.txt</pre>
+      <p style="font-size:0.6em; color:#777;">For amplicon data, consider <code>samtools markdup -S</code> to handle supplementary alignments.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ISSUE 3: NO MAPQ FILTERING -->
+<section>
+  <h2>Issue #3: No Mapping Quality Filtering</h2>
+  <div class="two-col">
+    <div>
+      <h3>Current Pipeline</h3>
+      <pre style="font-size:0.55em; background:#fce4e4; padding:10px; border-radius:6px; text-align:left;">samtools view -S -b -T ref.fa input.sam > output.bam
+# No -q flag (min MAPQ)
+# No -F flag (flag filtering)</pre>
+      <div class="danger">
+        <strong>All reads pass through</strong>, including:
+        <ul style="margin:5px 0 0 0;">
+          <li>Unmapped reads (MAPQ=0)</li>
+          <li>Multi-mapped reads (low MAPQ)</li>
+          <li>Secondary/supplementary alignments</li>
+          <li>Human host reads that weakly map to DENV</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <h3>Recommended Fix</h3>
+      <pre style="font-size:0.55em; background:#e4fce4; padding:10px; border-radius:6px; text-align:left;">samtools view -b -T ref.fa \
+  -q 20 \
+  -F 0x904 \
+  input.sam > output.bam
+
+# -q 20   : min MAPQ 20
+# -F 0x904: exclude:
+#   0x4   = unmapped
+#   0x100 = secondary alignment
+#   0x800 = supplementary alignment</pre>
+      <div class="flag">
+        <strong>Critical for clinical samples</strong> &mdash; plasma RNA contains human host reads. Without MAPQ filtering, host-derived reads with spurious low-quality alignments to DENV contaminate the pileup.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ISSUE 4: GATK PLOIDY -->
+<section>
+  <h2>Issue #4: GATK Uses Wrong Ploidy</h2>
+  <div class="two-col">
+    <div>
+      <h3>Current Pipeline</h3>
+      <pre style="font-size:0.55em; background:#fce4e4; padding:10px; border-radius:6px; text-align:left;">gatk HaplotypeCaller \
+  -R ref.fa -I sample.bam -O raw.vcf \
+  --standard-min-confidence-threshold-for-calling 30 \
+  --min-base-quality-score 20
+  # No --ploidy flag!
+  # Default = diploid (ploidy 2)</pre>
+      <div class="danger">
+        GATK defaults to <strong>diploid</strong> calling. This models heterozygous genotypes (0/1) that <strong>do not exist</strong> in a haploid viral genome. This can produce spurious heterozygous calls and miss true variants.
+      </div>
+    </div>
+    <div>
+      <h3>Inconsistency in Pipeline</h3>
+      <table>
+        <tr><th>Variant Caller</th><th>Ploidy Setting</th><th>Correct?</th></tr>
+        <tr><td>bcftools call</td><td><code>--ploidy 1</code></td><td class="good">Yes</td></tr>
+        <tr><td>GATK HaplotypeCaller</td><td>default (2)</td><td class="bad">No</td></tr>
+      </table>
+      <h3 style="margin-top:15px;">Fix</h3>
+      <pre style="font-size:0.55em; background:#e4fce4; padding:10px; border-radius:6px; text-align:left;">gatk HaplotypeCaller \
+  -R ref.fa -I sample.bam -O raw.vcf \
+  --standard-min-confidence-threshold-for-calling 30 \
+  --min-base-quality-score 20 \
+  <strong>-ploidy 1</strong></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ISSUE 5: IVAR CONSENSUS PARAMS -->
+<section>
+  <h2>Issue #5: ivar Consensus Parameters</h2>
+  <h3>Current command</h3>
+  <pre style="font-size:0.6em; background:#fce4e4; padding:10px; border-radius:6px; text-align:left; max-width:750px; margin:0 auto;">samtools mpileup -d 1000 -A -Q 0 sample.bam | ivar consensus -p sample -q 20 <strong>-t 0</strong></pre>
+  <div class="two-col" style="margin-top:15px;">
+    <div>
+      <h3>Problems</h3>
+      <table class="compare-table">
+        <tr><th>Parameter</th><th>Value</th><th>Issue</th></tr>
+        <tr><td><code>-t 0</code></td><td class="current">freq = 0</td><td>Any majority base called, even at 10% support</td></tr>
+        <tr><td><code>-m</code></td><td class="current">10 (default)</td><td>Only 10x min depth for calling &mdash; may be too low for clinical samples</td></tr>
+        <tr><td><code>-A</code></td><td class="current">include anomalous pairs</td><td>Includes orphan/discordant reads</td></tr>
+        <tr><td><code>-d 1000</code></td><td class="current">max depth 1000</td><td>May downsample high-coverage amplicon regions</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Recommended</h3>
+      <pre style="font-size:0.55em; background:#e4fce4; padding:10px; border-radius:6px; text-align:left;">samtools mpileup \
+  -d 10000 -Q 0 \
+  sample.bam | \
+ivar consensus \
+  -p sample \
+  -q 20 \
+  <strong>-t 0.5</strong> \
+  <strong>-m 20</strong></pre>
+      <ul style="font-size:0.6em;">
+        <li><code>-t 0.5</code>: Majority-rule consensus (base must have &ge;50% support)</li>
+        <li><code>-m 20</code>: Min 20x depth to call a base (else N)</li>
+        <li>Remove <code>-A</code>: Exclude anomalous pairs</li>
+        <li><code>-d 10000</code>: Higher ceiling for amplicon data</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ISSUE 6: NO VCF FILTERING -->
+<section>
+  <h2>Issue #6: No VCF Filtering Step</h2>
+  <div class="two-col">
+    <div>
+      <h3>Current Flow</h3>
+      <div class="pipeline-flow" style="flex-direction:column; align-items:flex-start;">
+        <div style="font-size:0.65em;">GATK HaplotypeCaller &rarr; <strong>raw.vcf</strong></div>
+        <div style="font-size:0.65em; margin-left:40px;">&darr; <em>(no filtering)</em></div>
+        <div style="font-size:0.65em;">SnpEff annotation &rarr; <strong>annotated.vcf</strong></div>
+      </div>
+      <div class="danger" style="margin-top:10px;">
+        Raw variant calls go directly to annotation. No quality filtering means <strong>false positives, strand bias artifacts, and low-confidence calls</strong> are annotated and reported as real variants.
+      </div>
+    </div>
+    <div>
+      <h3>Recommended: Add Variant Filtration</h3>
+      <pre style="font-size:0.5em; background:#e4fce4; padding:10px; border-radius:6px; text-align:left;">gatk VariantFiltration \
+  -R ref.fa \
+  -V raw.vcf \
+  -O filtered.vcf \
+  --filter-expression "QD < 2.0" \
+  --filter-name "LowQD" \
+  --filter-expression "FS > 60.0" \
+  --filter-name "StrandBias" \
+  --filter-expression "MQ < 40.0" \
+  --filter-name "LowMQ" \
+  --filter-expression "DP < 20" \
+  --filter-name "LowDepth"
+
+# Then filter to PASS only
+bcftools view -f PASS filtered.vcf \
+  > pass.vcf</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ISSUE 7: MISSING PRIMER TRIMMING -->
+<section>
+  <h2>Issue #7: No Primer Trimming</h2>
+  <div class="two-col">
+    <div>
+      <h3>The Problem</h3>
+      <ul style="font-size:0.65em;">
+        <li>Our DENV data is <strong>PCR-amplified</strong> WGS</li>
+        <li>Amplicon primers are sequenced as part of the reads</li>
+        <li>Primer sequences do not reflect the actual sample &mdash; they are synthetic</li>
+        <li>Variants in primer-binding regions will be <strong>masked</strong> by the primer sequence</li>
+        <li>Can also cause <strong>false consensus errors</strong> at primer junctions</li>
+      </ul>
+      <div class="danger">
+        The pipeline has <strong>no <code>ivar trim</code> step</strong>. This is standard for any amplicon-based viral sequencing workflow.
+      </div>
+    </div>
+    <div>
+      <h3>Recommended Fix</h3>
+      <p style="font-size:0.65em;">Add after alignment, before variant calling:</p>
+      <pre style="font-size:0.55em; background:#e4fce4; padding:10px; border-radius:6px; text-align:left;">ivar trim \
+  -b primers.bed \
+  -i sample.sorted.bam \
+  -p sample.trimmed \
+  -q 20 -m 50 -s 4 -e
+
+# Requires a BED file of primer positions
+# -q 20: min quality
+# -m 50: min length after trimming
+# -s 4:  sliding window for quality
+# -e:    include reads without primers</pre>
+      <div class="flag">
+        <strong>Dependency:</strong> Requires the primer scheme BED file used for amplicon generation. If not available, this step cannot be performed, which is a limitation of the upstream wet lab documentation.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ISSUE 8: COVERAGE METRICS -->
+<section>
+  <h2>Issue #8: Incomplete Coverage Metrics</h2>
+  <div class="two-col">
+    <div>
+      <h3>Current Metrics</h3>
+      <ul style="font-size:0.65em;">
+        <li>Average coverage depth per sample</li>
+        <li>N-count in consensus FASTA</li>
+        <li>Total bases in consensus</li>
+        <li>Coverage depth plot (per-position)</li>
+      </ul>
+      <div class="flag">
+        Average depth alone is <strong>misleading</strong>. A sample with 500x average could have 0x coverage over 20% of the genome &mdash; and the pipeline would not flag this.
+      </div>
+    </div>
+    <div>
+      <h3>Should Also Report</h3>
+      <table>
+        <tr><th>Metric</th><th>Why It Matters</th></tr>
+        <tr><td>% genome at &ge;10x</td><td>Minimum for reliable consensus</td></tr>
+        <tr><td>% genome at &ge;30x</td><td>Minimum for reliable variant calling</td></tr>
+        <tr><td>% genome at &ge;100x</td><td>Confident minor variant detection</td></tr>
+        <tr><td>Median depth</td><td>More robust than mean</td></tr>
+        <tr><td>% on-target reads</td><td>Host contamination indicator</td></tr>
+        <tr><td>Evenness of coverage</td><td>Amplicon dropout detection</td></tr>
+      </table>
+      <p style="font-size:0.6em; color:#777; margin-top:8px;">These are easily computed from the existing <code>samtools depth</code> output.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MINOR ISSUES -->
+<section>
+  <h2>Additional Issues</h2>
+  <div class="verdict-grid">
+    <div class="flag">
+      <strong>FastQC reports are never evaluated</strong><br>
+      Reports are generated but not parsed. No automated pass/fail gate. A sample with catastrophic quality would still proceed through the pipeline.
+    </div>
+    <div class="flag">
+      <strong>Unused/redundant scripts</strong><br>
+      <code>sam2consensus_test2.py</code> and <code>sam2consensus_test2_ivar.py</code> are in the package but never called by <code>run_pipeline.py</code>. Creates confusion.
+    </div>
+    <div class="flag">
+      <strong>fastp JSON reports not parsed</strong><br>
+      fastp generates detailed JSON with adapter rates, quality distributions, and pass/fail metrics &mdash; the pipeline ignores all of it.
+    </div>
+    <div class="flag">
+      <strong>No multi-sample summary QC</strong><br>
+      No MultiQC or equivalent aggregation. Reviewing 40 individual FastQC + fastp reports manually is impractical.
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT ON OUR DATA -->
+<section>
+  <h2>Specific Impact on Our DENV Nepal Data</h2>
+  <h3>Our data has known challenges the pipeline does not address</h3>
+  <table style="font-size:0.55em;">
+    <tr><th>Data Characteristic</th><th>Pipeline Handling</th><th>Risk</th></tr>
+    <tr>
+      <td>R2 imaging failures (42% N at pos 24, 59, 82)</td>
+      <td class="current">fastp default Q15 &mdash; partially retained</td>
+      <td class="bad">N bases and low-Q bases contaminate alignment</td>
+    </tr>
+    <tr>
+      <td>Short inserts (38&ndash;87bp peak, 2x231bp reads)</td>
+      <td class="current">No overlap correction enabled</td>
+      <td class="warn">Missed error correction opportunity</td>
+    </tr>
+    <tr>
+      <td>PCR duplication (4&ndash;21%)</td>
+      <td class="current">No duplicate removal</td>
+      <td class="bad">Biased allele frequencies, inflated depth</td>
+    </tr>
+    <tr>
+      <td>Clinical plasma (host contamination)</td>
+      <td class="current">No MAPQ filtering</td>
+      <td class="bad">Host reads in pileup, false variants</td>
+    </tr>
+    <tr>
+      <td>Elevated GC in 3 samples (50&ndash;51%)</td>
+      <td class="current">No on-target rate metric</td>
+      <td class="warn">Cannot quantify host read fraction</td>
+    </tr>
+    <tr>
+      <td>Variable depth (65K&ndash;1.28M clean reads)</td>
+      <td class="current">Only average depth reported</td>
+      <td class="warn">Low-depth samples may have gaps</td>
+    </tr>
+  </table>
+</section>
+
+<!-- COMPARISON TABLE -->
+<section>
+  <h2>Parameter Comparison: Current vs Recommended</h2>
+  <table class="compare-table" style="font-size:0.5em;">
+    <tr><th>Step</th><th>Parameter</th><th>Current</th><th>Recommended</th></tr>
+    <tr><td>fastp</td><td>Quality threshold</td><td class="current">Q15 (default)</td><td class="recommended">Q20</td></tr>
+    <tr><td>fastp</td><td>Min read length</td><td class="current">15bp (default)</td><td class="recommended">50bp</td></tr>
+    <tr><td>fastp</td><td>Sliding window</td><td class="current">disabled</td><td class="recommended">window=4, mean Q20</td></tr>
+    <tr><td>fastp</td><td>Overlap correction</td><td class="current">disabled</td><td class="recommended">enabled, min overlap 30bp</td></tr>
+    <tr><td>Deduplication</td><td>Method</td><td class="current">none</td><td class="recommended">samtools markdup or Picard</td></tr>
+    <tr><td>samtools view</td><td>MAPQ filter</td><td class="current">none</td><td class="recommended">-q 20</td></tr>
+    <tr><td>samtools view</td><td>Flag filter</td><td class="current">none</td><td class="recommended">-F 0x904</td></tr>
+    <tr><td>Primer trimming</td><td>Tool</td><td class="current">none</td><td class="recommended">ivar trim (if BED available)</td></tr>
+    <tr><td>ivar consensus</td><td>Freq threshold</td><td class="current">-t 0</td><td class="recommended">-t 0.5</td></tr>
+    <tr><td>ivar consensus</td><td>Min depth</td><td class="current">10x (default)</td><td class="recommended">20x (-m 20)</td></tr>
+    <tr><td>mpileup</td><td>Max depth</td><td class="current">-d 1000</td><td class="recommended">-d 10000</td></tr>
+    <tr><td>GATK</td><td>Ploidy</td><td class="current">2 (default)</td><td class="recommended">1 (-ploidy 1)</td></tr>
+    <tr><td>GATK</td><td>VCF filtering</td><td class="current">none</td><td class="recommended">VariantFiltration (QD, FS, MQ, DP)</td></tr>
+    <tr><td>Coverage</td><td>Metrics</td><td class="current">mean only</td><td class="recommended">mean, median, % at 10x/30x/100x</td></tr>
+  </table>
+</section>
+
+<!-- SEVERITY SUMMARY -->
+<section>
+  <h2>Issue Severity Summary</h2>
+  <div class="three-col">
+    <div>
+      <h3 class="bad" style="text-align:center;">Critical (4)</h3>
+      <div class="danger">
+        <ol style="margin:0; font-size:0.9em;">
+          <li>fastp all defaults &mdash; R2 artifacts retained</li>
+          <li>No duplicate removal</li>
+          <li>GATK ploidy=2 (should be 1)</li>
+          <li>No VCF quality filtering</li>
+        </ol>
+      </div>
+    </div>
+    <div>
+      <h3 class="warn" style="text-align:center;">Important (4)</h3>
+      <div class="flag">
+        <ol style="margin:0; font-size:0.9em;">
+          <li>No MAPQ/flag filtering</li>
+          <li>ivar <code>-t 0</code> freq threshold</li>
+          <li>No primer trimming step</li>
+          <li>Incomplete coverage metrics</li>
+        </ol>
+      </div>
+    </div>
+    <div>
+      <h3 style="text-align:center; color:#555;">Minor (4)</h3>
+      <div class="pass">
+        <ol style="margin:0; font-size:0.9em;">
+          <li>FastQC reports unused</li>
+          <li>fastp JSON not parsed</li>
+          <li>Unused dev scripts</li>
+          <li>No MultiQC aggregation</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OVERALL VERDICT -->
+<section>
+  <h2>Overall Verdict</h2>
+  <div class="two-col">
+    <div>
+      <div class="highlight-box">
+        <h3>Architecture: Good</h3>
+        <ul style="font-size:0.7em; text-align:left;">
+          <li>Modular Python design</li>
+          <li>Correct tool selection</li>
+          <li>Good pre-flight and reference validation</li>
+          <li>Proper annotation pipeline</li>
+          <li>Pre-built DENV1&ndash;4 references</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div style="background:linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color:white; border-radius:10px; padding:15px 25px; margin:8px;">
+        <h3 style="color:white;">Parameterization: Insufficient</h3>
+        <ul style="font-size:0.7em; text-align:left;">
+          <li>4 critical issues that directly affect consensus accuracy</li>
+          <li>Multiple steps run with defaults instead of appropriate thresholds</li>
+          <li>Missing standard steps (dedup, MAPQ filter, VCF filter)</li>
+          <li>Not production-ready for clinical amplicon data without modifications</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="flag" style="max-width:750px; margin:15px auto; font-size:0.65em;">
+    <strong>Recommendation:</strong> The pipeline provides a solid foundation but requires the modifications outlined in this review before being used for the DENV Nepal dataset. The most impactful changes are: (1) explicit fastp parameters, (2) duplicate removal, (3) GATK <code>-ploidy 1</code>, and (4) VCF filtering.
+  </div>
+</section>
+
+<!-- METHODS -->
+<section>
+  <h2>Methods</h2>
+  <div style="text-align:left; font-size:0.6em; max-width:700px; margin:0 auto;">
+    <p><strong>Pipeline reviewed:</strong> <a href="https://github.com/Rajindra04/Virus-Variant-Calling-Pipeline" style="color:#3498db;">Virus-Variant-Calling-Pipeline</a> (Rajindra Napit, MIT License)</p>
+    <p><strong>Review method:</strong> Complete code-level analysis of all 8 pipeline scripts, configuration files, reference genomes, and environment specification</p>
+    <p><strong>Context:</strong> Assessed against DENV Nepal WGS dataset (BioProject PRJNA1346681, 40 samples, Illumina MiSeq 2x231bp, PCR-amplified, clinical plasma)</p>
+    <p><strong>QC baseline:</strong> fastp v1.0.1 analysis of all 40 samples identified: R2 imaging artifacts at cycles 25/60/83/132, short insert sizes (38&ndash;87bp peak), 4&ndash;21% duplication, elevated GC in 3 samples</p>
+    <p><strong>Review date:</strong> February 2026</p>
+  </div>
+</section>
+
+</div><!-- end slides -->
+</div><!-- end reveal -->
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+Reveal.initialize({
+  hash: true,
+  slideNumber: true,
+  transition: 'slide',
+  width: 1100,
+  height: 700,
+  margin: 0.08,
+});
+</script>
+</body>
+</html>

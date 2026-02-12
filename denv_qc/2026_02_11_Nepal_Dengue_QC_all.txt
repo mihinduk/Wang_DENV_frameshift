@@ -1,0 +1,239 @@
+2026_02_11_Nepal_Dengue_QC_all:
+
+Plan:
+- QC of raw data
+ - fastp/ fastqc
+ - run ALL samples
+
+The whole genome sequences generated during the study are available in NCBI at http://www.ncbi.nlm.nih.gov/bioproject/1346681. BioProject ID: PRJNA1346681.  Sequences are available in NCBI genebank (accession ID: SAMN52839023-SAMN52839062)
+
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Krishna_wgs/2025_Dengue_manuscript/denv_qc"
+htcf:/scratch/sahlab/kathie/DENV_frameshift/denv_qc
+
+https://github.com/mihinduk/Wang_DENV_frameshift.gitcd
+
+1.  Fetch the raw fastqs to HTCF:
+First, connect to NCBI to find all the raw data related to this project:
+  The whole genome sequences generated during the study are available in NCBI at http://www.ncbi.nlm.nih.gov/bioproject/1346681. BioProject ID: PRJNA1346681.  Sequences are available in NCBI genebank
+  (accession ID: SAMN52839023-SAMN52839062)
+
+  I want you to make 3 directories on htcf 1_DENV, 2_DENV and 3_DENV and:
+   download the RAW FASTQ files for the DENV1 samples (expect 6 samples) to 1_DENV;
+  download the RAW FASTQ files for the DENV2 samples (expect 30 samples) to 2_DENV;
+  download the RAW FASTQ files for the DENV3 samples (expect 4 samples) to 3_DENV
+
+All downloads are complete. Here's the summary:
+  ┌───────────┬──────────┬─────────┬───────┬────────┐
+  │ Directory │ Serotype │ Samples │ Files │  Size  │
+  ├───────────┼──────────┼─────────┼───────┼────────┤
+  │ 1_DENV/   │ DENV1    │ 6       │ 12    │ 91 MB  │
+  ├───────────┼──────────┼─────────┼───────┼────────┤
+  │ 2_DENV/   │ DENV2    │ 30      │ 60    │ 430 MB │
+  ├───────────┼──────────┼─────────┼───────┼────────┤
+  │ 3_DENV/   │ DENV3    │ 4       │ 8     │ 68 MB  │
+  ├───────────┼──────────┼─────────┼───────┼────────┤
+  │ Total     │          │ 40      │ 80    │ 589 MB │
+  └───────────┴──────────┴─────────┴───────┴────────┘
+
+2.  Great job, Claude.  Good resourcefullness. Now that you have all the fastq files, we want to access their quality.  Please tell me what you recommend - fastp, fastq or other?
+
+For Illumina MiSeq amplicon data like this, I'd recommend fastp for a few reasons:
+
+  - All-in-one: Does both QC assessment and adapter/quality trimming in a single pass, whereas FastQC is assessment-only (you'd still need a separate trimmer like Trimmomatic)
+  - Speed: Significantly faster than FastQC + Trimmomatic pipeline
+  - Auto-detects adapters: No need to manually specify Illumina adapter sequences
+  - Good reports: Generates HTML + JSON reports per sample
+  - MultiQC compatible: The JSON output can be aggregated across all 40 samples with MultiQC for a single summary view
+
+  My recommended workflow would be:
+  1. fastp - trim adapters, filter low-quality reads, generate per-sample QC reports
+  2. MultiQC - aggregate all 40 fastp reports into one summary for easy comparison across samples/serotypes
+
+  This is especially practical here since these are viral amplicon libraries (small genome, MiSeq) where you'll want clean reads for downstream consensus/variant calling anyway — so combining QC + trimming saves
+  a step.
+
+  Overall QC Results:
+  - All samples pass with Q20 > 98% and Q30 > 94% — excellent quality
+  - Read retention after trimming ranges from 73.5% to 91.9% (mostly adapter removal)
+  - GC content is consistent at ~46-51%, expected for Dengue virus
+  - One outlier: SRR35818889 (Sample33, DENV2) has ~1.6M raw reads vs ~80-300K for others — much higher sequencing depth
+
+  Output locations on HTCF:
+  ┌────────────────────┬──────────────────────────────────────────────────┐
+  │       Output       │                       Path                       │
+  ├────────────────────┼──────────────────────────────────────────────────┤
+  │ Trimmed reads      │ {1,2,3}_DENV/trimmed/                            │
+  ├────────────────────┼──────────────────────────────────────────────────┤
+  │ Per-sample reports │ {1,2,3}_DENV/fastp_reports/                      │
+  ├────────────────────┼──────────────────────────────────────────────────┤
+  │ MultiQC report     │ multiqc/DENV-Nepal-QC-Report_multiqc_report.html │
+  └────────────────────┴──────────────────────────────────────────────────┘
+
+cd "/Users/handley_lab/Handley Lab Dropbox/virome/Krishna_wgs/2025_Dengue_manuscript/denv_qc"
+rsync -avh htcf:/scratch/sahlab/kathie/DENV_frameshift/denv_qc/biosample_metadata.xml .
+
+3.  Now please create a presentation using a json (I think) to summarize your findings, so I can look through them.
+
+The presentation is ready. Open it in your browser:
+
+  denv_qc/DENV_QC_Report.html
+
+  It's a reveal.js slideshow (arrow keys to navigate) with 15 slides covering:
+
+  1. Title - project summary
+  2. Project Overview - study design, platform, source
+  3. Sample Breakdown - 6 DENV1 / 30 DENV2 / 4 DENV3 with counts
+  4. Overall QC Summary - headline metrics (Q20, Q30, pass rate, duplication, GC)
+  5. fastp Parameters - exact settings used
+  6. Read Retention - bar charts for each serotype (3 slides)
+  7. Sequencing Depth - per-serotype min/median/max clean reads
+  8. Quality Scores - Q20/Q30 comparison across serotypes
+  9. GC Content - observed vs expected, flagging elevated samples
+  10. Duplication Rates - per-serotype breakdown
+  11. Insert Size - short inserts typical for viral amplicon
+  12. Detailed Tables - DENV1 and DENV3 full metrics
+  13. Samples of Note - SRR35818889 (high depth/GC), SRR35818864 (low reads), SRR35818874 (low retention)
+  14. Summary & Next Steps - all 40 pass, recommended downstream workflow
+  15. Methods - tools and versions
+
+Problem: Very short insert size
+2x231bp MiSeq
+The insert size distribution peaking at 38-50bp means the library fragments are extremely short — much shorter than the read length. This is consistent with:
+
+  - Degraded clinical RNA — these are plasma samples from dengue patients, where viral RNA is often fragmented
+  - PCR amplicon tiling with short overlaps — if they used a tiling amplicon approach, the amplicons may have been short by design
+  - Over-fragmentation during library prep
+
+  The practical consequence: R1 and R2 overlap extensively (a 50bp insert sequenced 2x231bp means each read extends ~180bp past the insert into adapter). This explains the ~15-20% read loss during trimming — it's
+   largely adapter read-through removal.
+
+Problem: The R2 N-Content Spikes — MiSeq Cycle-Specific Imaging Failures
+
+  This is a flowcell-level instrument artifact during Read 2 sequencing. Here's the evidence:
+
+  - Affects ALL 40 samples identically (40/40 at positions 24, 59, 82; 27/40 at position 131)
+  - R1 is completely clean at the same positions
+  - Single-cycle events: the spike is exactly 1 base wide, with quality plummeting to Q13-17 at the spike and recovering over ~5 cycles afterward
+  - The recovery pattern (Q14 → Q29 → Q34 → Q36 over 3-4 bases) is classic post-failure phasing recovery
+
+  What happened: During specific cycles of Read 2, the MiSeq instrument had imaging failures — most likely caused by:
+
+  - Air bubbles passing through the flowcell during those specific cycles
+  - Reagent delivery failures at those cycles
+  - Focus loss during imaging
+
+  At cycle 25 (R2 pos 24), 42% of all reads across the entire flowcell got N-called. Because this affects all tiles simultaneously, it's a run-level chemistry/fluidics issue, not a sample-specific problem. The
+  irregular spacing (35, 23, 49 cycles apart) rules out a periodic mechanical cause and points to stochastic bubble/reagent events.
+
+  Impact Assessment
+
+  The good news: fastp's quality trimming and N-filtering handles this well — the post-filtering data is clean. The N-spike bases get either trimmed or the reads get discarded. The bases flanking the spikes
+  recover to Q>30 within 3-5 cycles. This is a cosmetic issue in the raw data that doesn't significantly impact the final trimmed reads.
+
+4.  Please analyze this pipeline (https://github.com/Rajindra04/Virus-Variant-Calling-Pipeline) and explain to me what quality controls it contains.  Are these sufficient for assembling the DENV genomes that you just assessed with fastp and fastQC?  If not, what do you think should be added, changed or removed? 
+
+  What QC the pipeline contains
+
+  The pipeline has 7 stages with QC checkpoints:
+  ┌─────────────────┬──────────────────────┬──────────────────────────────────────────────────────────────────────────┐
+  │      Stage      │         Tool         │                               QC Controls                                │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Pre-flight      │ Python               │ Checks input dirs, tools in PATH, write permissions                      │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Trimming        │ fastp                │ All defaults (Q15, min length 15bp, auto adapter detect)                 │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Post-trim QC    │ FastQC               │ Generates HTML reports but never evaluates them                          │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Alignment       │ bwa-mem2             │ No MAPQ filtering, no flag filtering                                     │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ BAM validation  │ samtools             │ quickcheck + alignment count > 0                                         │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Consensus       │ ivar                 │ -q 20 base quality, -t 0 frequency (any majority), default 10x min depth │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Variant calling │ GATK HaplotypeCaller │ Min confidence Q30, min base qual Q20, but default diploid ploidy        │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Annotation      │ SnpEff/SnpSift       │ Functional annotation of variants                                        │
+  ├─────────────────┼──────────────────────┼──────────────────────────────────────────────────────────────────────────┤
+  │ Summary         │ Python               │ Average coverage, N-count in consensus                                   │
+  └─────────────────┴──────────────────────┴──────────────────────────────────────────────────────────────────────────┘
+
+  Problems for our DENV data specifically
+
+  Given what we found in the fastp QC (short inserts, R2 imaging artifacts, clinical plasma RNA), here are the critical gaps:
+
+  1. fastp defaults are far too permissive
+  - Default min quality = Q15, min length = 15bp. We used Q20 and 50bp, which is already conservative for viral WGS. A 15bp read is useless for a 10.7kb genome.
+  - No sliding window trimming (--cut_front/--cut_tail) — the R2 imaging artifact bases (Q13-14) would be partially retained
+  - No overlap-based error correction — critical for our data given the 38-87bp inserts where R1/R2 overlap extensively
+  - No N-filtering — the R2 cycle failures (up to 42% N at positions 24, 59, 82) need explicit handling
+
+  2. No primer/amplicon trimming
+  - These are PCR-amplified WGS libraries. If amplicon primers were used, there is no ivar trim step to remove primer sequences, which would introduce false variants at primer binding sites.
+
+  3. No duplicate marking/removal
+  - Our data shows 4-21% duplication rates. PCR duplicates can bias variant frequencies and inflate coverage estimates. No samtools markdup or Picard MarkDuplicates step exists.
+
+  4. No mapping quality filtering
+  - samtools view runs with no -q or -F flags — unmapped reads, low-MAPQ reads, supplementary alignments all pass through to variant calling. With clinical plasma samples that likely contain host reads, this is a
+   problem.
+
+  5. GATK ploidy = diploid (wrong for virus)
+  - bcftools call correctly uses --ploidy 1 but the main GATK HaplotypeCaller pathway uses the default ploidy of 2, which will model heterozygous calls that don't exist in a haploid viral genome.
+
+  6. No VCF filtering
+  - Raw GATK output goes straight to SnpEff annotation with no VariantFiltration or bcftools filter step. No strand bias, read depth, or quality-by-depth filters.
+
+  7. ivar -t 0 is risky
+  - A frequency threshold of 0 means the consensus base is called at any frequency. With our samples potentially containing host reads or mixed infections, this could call incorrect bases at low-coverage
+  positions.
+
+  8. No genome coverage assessment
+  - Only reports average depth — no metrics for % genome covered at 10x, 30x, 100x. A sample could have 500x average but 0x over 20% of the genome and still look fine.
+
+  Recommended changes
+
+  SHOULD ADD:
+    + Stricter fastp params: -q 20, --length_required 50,
+      --cut_front, --cut_tail, --cut_window_size 4,
+      --cut_mean_quality 20, --correction, --overlap_len_require 30
+    + samtools markdup or picard MarkDuplicates
+    + samtools view -F 0x904 -q 20 (filter unmapped, secondary,
+      supplementary, and low MAPQ reads)
+    + ivar trim (if primer BED file is available)
+    + ivar consensus -t 0.5 -m 20 (majority-rule at 50%, min 20x)
+    + GATK --ploidy 1
+    + GATK VariantFiltration or bcftools filter
+    + Genome coverage breadth metrics (% at 10x, 30x, 100x)
+    + Programmatic evaluation of FastQC/fastp reports (pass/fail gate)
+
+  SHOULD CHANGE:
+    ~ fastp defaults → explicit parameters matching our QC settings
+    ~ ivar -t 0 → -t 0.5 (or at least 0.25 for mixed infection detection)
+    ~ ivar default min depth → explicit -m 20 or -m 30
+    ~ samtools mpileup -d 1000 → -d 10000 (for high-coverage amplicon data)
+
+  COULD REMOVE:
+    - sam2consensus_test2.py / sam2consensus_test2_ivar.py
+      (redundant/unused development scripts that cause confusion)
+
+  The pipeline provides a reasonable skeleton but needs hardening for production use with clinical amplicon data like ours. The biggest risks are the permissive fastp defaults (which would fail to clean up our R2
+   artifacts), missing duplicate removal, and the wrong ploidy setting in GATK.
+
+
+** Please create a second presentation using a json to summarize these findings, so I can share them. **
+
+
+
+5.   I have data from cultured virus sequenced with the same primers at WashU.  Can you work here: /scratch/sahlab/kathie/DENV_frameshift/denv_qc/wu_comp to run the same analysis on these samples so we can see how similar or dissimilar they are to the Nepalese results?
+The data to use can be found here:
+DENV1: htcf:/lts/sahlab/data4/DATA_DOWNLOADS_3/N997/*Dengue1*
+DENV2: htcf:/lts/sahlab/data4/DATA_DOWNLOADS_3/N997/*Dengue2*
+DENV3: htcf:/lts/sahlab/data4/DATA_DOWNLOADS_3/N997/*Dengue3*
+
+Striking differences. Let me also copy the MultiQC report locally and build the comparison presentation.
+
+Three Presentations Created (all in the local denv_qc/ directory):
+    - WashU-DENV-QC-Report_multiqc_report
+    - DENV_QC_Report.html - Nepal QC findings
+    - DENV_Pipeline_Review.html - Virus-Variant-Calling-Pipeline code review
+    - DENV_Nepal_vs_WashU_Comparison.html - Nepal vs WashU comparison
